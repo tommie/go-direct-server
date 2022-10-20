@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -112,3 +113,14 @@ func TestServe(t *testing.T) {
 }
 
 var contentRE = regexp.MustCompile(`content="([^"]+)"`)
+
+func TestReadRules(t *testing.T) {
+	rs, err := readRules(strings.NewReader("# Comment\n\na/.* b c d\ne/.* f g h"))
+	if err != nil {
+		t.Fatalf("readRules failed: %v", err)
+	}
+
+	if want := 2; len(rs) != want {
+		t.Errorf("readRules len: got %v, want %v", len(rs), want)
+	}
+}

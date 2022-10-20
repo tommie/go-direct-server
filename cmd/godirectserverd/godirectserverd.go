@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -64,7 +65,7 @@ func serve(l net.Listener, rs []*Rule, hostHeader string) error {
 		},
 	}
 
-	log.Printf("Serving on %s...", s.Addr)
+	log.Printf("Serving on %s with %d rule(s)...", s.Addr, len(rs))
 
 	return s.Serve(l)
 }
@@ -77,8 +78,13 @@ func loadRules(path string) ([]*Rule, error) {
 	}
 	defer f.Close()
 
+	return readRules(f)
+}
+
+// readRules reads lines of rules from a reader.
+func readRules(r io.Reader) ([]*Rule, error) {
 	var rs []*Rule
-	sc := bufio.NewScanner(f)
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
 
@@ -104,7 +110,7 @@ func loadRules(path string) ([]*Rule, error) {
 		})
 	}
 
-	return nil, sc.Err()
+	return rs, sc.Err()
 }
 
 var defaultRules = []*Rule{
