@@ -84,31 +84,55 @@ func TestServe(t *testing.T) {
 
 		go serve(l, defaultRules, "x-forwarded-host")
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/a/b", l.Addr()), nil)
-		if err != nil {
-			t.Fatalf("NewRequest failed: %v", err)
-		}
-		req.Header.Set("X-Forwarded-Host", "ahostname:1234")
+		t.Run("found", func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/a/b", l.Addr()), nil)
+			if err != nil {
+				t.Fatalf("NewRequest failed: %v", err)
+			}
+			req.Header.Set("X-Forwarded-Host", "ahostname:1234")
 
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("Get failed: %v", err)
-		}
-		defer resp.Body.Close()
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("Get failed: %v", err)
+			}
+			defer resp.Body.Close()
 
-		if want := http.StatusOK; resp.StatusCode != want {
-			t.Errorf("Get StatusCode: got %v, want %v", resp.StatusCode, want)
-		}
+			if want := http.StatusOK; resp.StatusCode != want {
+				t.Errorf("Get StatusCode: got %v, want %v", resp.StatusCode, want)
+			}
 
-		bs, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			t.Fatalf("ReadAll failed: %v", err)
-		}
+			bs, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("ReadAll failed: %v", err)
+			}
 
-		got := contentRE.FindStringSubmatch(string(bs))
-		if want := "ahostname/a/b git ssh://git@ahostname/a/b"; len(got) > 1 && got[1] != want {
-			t.Errorf("Get content: got %q, want %q", got[1], want)
-		}
+			got := contentRE.FindStringSubmatch(string(bs))
+			if want := "ahostname/a/b git ssh://git@ahostname/a/b"; len(got) > 1 && got[1] != want {
+				t.Errorf("Get content: got %q, want %q", got[1], want)
+			}
+		})
+
+		t.Run("missing", func(t *testing.T) {
+			resp, err := http.Get(fmt.Sprintf("http://%s/a/b", l.Addr()))
+			if err != nil {
+				t.Fatalf("Get failed: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if want := http.StatusOK; resp.StatusCode != want {
+				t.Errorf("Get StatusCode: got %v, want %v", resp.StatusCode, want)
+			}
+
+			bs, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("ReadAll failed: %v", err)
+			}
+
+			got := contentRE.FindStringSubmatch(string(bs))
+			if want := "127.0.0.1/a/b git ssh://git@127.0.0.1/a/b"; len(got) > 1 && got[1] != want {
+				t.Errorf("Get content: got %q, want %q", got[1], want)
+			}
+		})
 	})
 }
 

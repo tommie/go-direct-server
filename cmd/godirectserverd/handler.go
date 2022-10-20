@@ -51,9 +51,12 @@ var htmlTmpl = template.Must(template.New("").Parse(`<!DOCTYPE html>
 
 // host returns the requested host.
 func (h *goVCSHandler) host(r *http.Request) string {
-	if h.hostHeader == "host" {
-		return r.Host
+	if h.hostHeader != "host" {
+		host := r.Header.Get(h.hostHeader)
+		if host != "" {
+			return host
+		}
 	}
 
-	return r.Header.Get(h.hostHeader)
+	return r.Host
 }
