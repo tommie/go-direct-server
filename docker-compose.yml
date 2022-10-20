@@ -1,0 +1,18 @@
+---
+version: "3.7"
+
+services:
+  godirectserver:
+    image: local/godirectserver
+    build:
+      context: .
+      args:
+        golang_ver: "1.19.2-alpine3.16"
+        alpine_ver: "3.16.2"
+    user: nobody
+    restart: unless-stopped
+    read_only: true
+    environment:
+      GDS_LISTEN_PORT: 8080
+    ports:
+    - "${EXPOSE_IP:-127.0.0.1}:8087:8080"
