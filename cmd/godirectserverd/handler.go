@@ -9,11 +9,12 @@ import (
 // goVCSHandler serves HTML files with a <meta name=go-import> header,
 // based on a module repository resolver.
 type goVCSHandler struct {
-	r *Resolver
+	r          *Resolver
+	hostHeader string
 }
 
 func (h *goVCSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	rec, err := h.r.Resolve(r.Context(), r.Host+r.URL.Path)
+	rec, err := h.r.Resolve(r.Context(), h.host(r)+r.URL.Path)
 	if err != nil {
 		code := http.StatusInternalServerError
 		if err == ErrNotFound {
@@ -47,3 +48,12 @@ var htmlTmpl = template.Must(template.New("").Parse(`<!DOCTYPE html>
   See <a href="{{.RepoURL}}">{{.Record.Root}}</a>.
 </html>
 `))
+
+// host returns the requested host.
+func (h *goVCSHandler) host(r *http.Request) string {
+	if h.hostHeader == "host" {
+		return r.Host
+	}
+
+	return r.Header.Get(h.hostHeader)
+}

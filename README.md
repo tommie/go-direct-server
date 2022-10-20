@@ -27,3 +27,12 @@ The `-rule-file` flag takes a path to a file with lines containing
 * The `repourl-tmpl` is the repository URL, e.g. `ssh://git@github.com/$1`.
 
 Empty lines and those starting with hash are ignored.
+
+## Configuration
+
+These flags are available:
+
+* **-host-header** sets the HTTP request header to read the server hostname from.
+  This is useful behind a reverse proxy that sets e.g. `X-Forwarded-Host`.
+* **-listen-addr** sets the TCP address to listen for HTTP connections on.
+* **-rule-file** sets the path of the rule file.

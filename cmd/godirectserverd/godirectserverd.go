@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	hostHeader = flag.String("host-header", "host", "The header to read the request hostname from.")
 	listenAddr = flag.String("listen-addr", "localhost:0", "TCP address to listen for HTTP requests at.")
 	ruleFile   = flag.String("rule-file", "", "File containing module path patterns and string templates.")
 )
@@ -49,16 +50,17 @@ func run() error {
 	}
 	defer l.Close()
 
-	return serve(l, rs)
+	return serve(l, rs, *hostHeader)
 }
 
 // serve runs the HTTP server on the given listener with the given
 // rule set.
-func serve(l net.Listener, rs []*Rule) error {
+func serve(l net.Listener, rs []*Rule, hostHeader string) error {
 	s := http.Server{
 		Addr: l.Addr().String(),
 		Handler: &goVCSHandler{
-			r: &Resolver{rs},
+			r:          &Resolver{rs},
+			hostHeader: strings.ToLower(hostHeader),
 		},
 	}
 
